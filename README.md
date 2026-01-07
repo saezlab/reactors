@@ -351,7 +351,7 @@ pixi run example-boolean-network
 
 ### 6. Sparse 50-Gene GRN with Correlations
 
-**Description:** A 50-node gene regulatory network with 3–8 random regulators per gene (mix of activators and repressors) plus an embedded two-gene toggle to induce bistable phases. The script fires a parallel SSA ensemble with mid-run perturbations on the toggle arms, then visualizes (1) the bimodal final-state scatter for the toggle pair and (2) a 50×50 log1p correlation heatmap to expose co-expression structure across the sparse graph.
+**Description:** A 50-node gene regulatory network with 3–8 random regulators per gene (mix of activators and repressors) plus an embedded two-gene or three-gene toggle to induce bistable phases. The script fires a parallel SSA ensemble with mid-run perturbations on the toggle arms, then visualizes (1) the bimodal final-state scatter for the toggle pair and (2) a 50×50 log1p correlation heatmap to expose co-expression structure across the sparse graph.
 
 **How to run it:** `examples/grn_sparse_network.py` saves `examples/output/grn_sparse_network.png` containing both panels. Execute it via:
 
@@ -489,15 +489,6 @@ traj = reactors.simulate_ensemble(
 ```
 Each `sN` identifier maps to species `N` in the stoichiometry row, so `s0` targets the first species, `s1` the second, and so on.
 
-### Potential use cases
-
-- **Causal discovery under intrinsic noise:** Generate bursty, bimodal, or switching trajectories so structure-learning methods face true jump data instead of averages.
-- **Active / sequential experimental design:** Treat knockdowns, pulses, and dose edits as discrete interventions on the stochastic process to test adaptive policies.
-- **RL and control for event-driven biochemistry:** Expose policies to environments driven by random reaction firings with sudden jumps and occasional extinction/switching.
-- **Simulation-based inference on discrete dynamics:** Produce large ensembles for likelihood-free / neural inference when partial observations or irregular sampling make the likelihood hard to write down.
-- **Rare-event and switching benchmarks:** Capture bistability, extinction, and escape times directly from the jump process rather than mean-field averages.
-
-
 ## Related software
 
 Reactors intentionally stays tiny to keep Python SSA prototyping lightweight; if you need expressive modeling DSLs, SBML import, efficient ODE/SDE integrators for fast deterministic or stochastic approximations, or Boolean simulators that scale to very large signaling networks, consider these more mature tools:
@@ -524,7 +515,7 @@ Future work could tackle per-trajectory readouts, expose RNG checkpointing, add 
 
 ## Disclaimer
 
-The initial functional version of the library was built in a single day with zero Rust experience, using GPT-5.1-Codex. It works as intended but should be viewed as an exploratory prototype rather than a fully validated reference implementation.
+This library was written in Rust by GPT-5.2-Codex and Gemini 3 Pro.
 
 ## License
 
