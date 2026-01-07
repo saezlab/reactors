@@ -11,7 +11,7 @@
 
 </div>
 
-**Reactors** is an embarrassingly parallel and lightweight (only [1 single file](src/lib.rs) <50 KB) jump-process simulator implementing the Gillespie direct SSA. It provides a NumPy-friendly Python API, executes ensembles in parallel without holding the GIL, and ships as a single, memory-safe compiled wheel via maturin/pyo3. Unlike broader reaction-network toolchains with large symbolic or ODE stacks, **Reactors** stays minimal and efficient.
+**Reactors** is an embarrassingly parallel and lightweight (only [1 single file](src/lib.rs) <50 KB) jump-process simulator implementing the Gillespie's Stochastic Simulation Algorithm (SSA). It provides a NumPy-friendly Python API, executes ensembles in parallel without holding the GIL, and ships as a single, memory-safe compiled wheel via maturin/pyo3. Unlike broader reaction-network toolchains with large symbolic or ODE stacks, **Reactors** stays minimal and efficient.
 
 The library is designed for rapid experimentation and for generating ground-truth datasets used to benchmark network-inference or causal-discovery methods. It can simulate stochastic gene-regulatory circuits, signaling cascades, biochemical reaction networks, and simple intervention or control scenarios in epidemiological or biochemical systems, providing varied data sources for benchmarking.
 
