@@ -1,0 +1,49 @@
+[workspace]
+name = "reactors"
+version = "0.1.0"
+description = "Parallel SSA engine for stochastic reaction networks with Rust/PyO3 bindings."
+authors = ["GRN SSA Devs <dev@example.com>"]
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "linux-64"]
+
+[dependencies]
+python = "3.12.*"
+maturin = ">=1.5,<2.0"
+uv = ">=0.4"
+numpy = ">=1.26"
+scipy = ">=1.13"
+matplotlib = ">=3.9"
+
+#[feature.benchmark]
+#dependencies = { julia = "1.10.10" }
+
+[tasks]
+cargo-test = { cmd = "cargo test" }
+maturin-develop = { cmd = "maturin develop" }
+native-develop = { cmd = "maturin develop --release", env = { RUSTFLAGS = "-C target-cpu=native -C opt-level=3 -C link-arg=-dead_strip" } }
+examples-all = { cmd = "python python/run_all_examples.py" }
+example-birth-death = { cmd = "python examples/birth_death.py" }
+example-boolean-network = { cmd = "python examples/boolean_network.py" }
+example-toggle-switch = { cmd = "python examples/toggle_switch.py" }
+example-rna-splicing = { cmd = "python examples/rna_splicing.py" }
+example-large-benchmark = { cmd = "python examples/large_benchmark.py" }
+example-enzyme-kinetics = { cmd = "python examples/enzyme_kinetics.py" }
+example-cell-growth = { cmd = "python examples/cell_growth.py" }
+example-performance-scaling = { cmd = "python examples/performance_scaling.py" }
+example-parameter-inference = { cmd = "python examples/parameter_inference_mcmc.py" }
+example-transcriptional-burst = { cmd = "python examples/transcriptional_burst_analysis.py" }
+example-single-cell-pk = { cmd = "python examples/single_cell_pharmacokinetics.py" }
+example-pk-optimizer = { cmd = "python examples/pk_optimizer.py" }
+example-toggle-optimizer = { cmd = "python examples/toggle_switch_optimizer.py" }
+example-rare-event = { cmd = "python examples/rare_event_estimation.py" }
+example-covid-sir = { cmd = "python examples/covid_sir.py" }
+example-covid-intervention = { cmd = "python examples/covid_intervention_optimizer.py" }
+example-rna-velocity-abc = { cmd = "python examples/rna_velocity_abc.py" }
+example-michaelis-menten = { cmd = "python examples/michaelis_menten_deterministic.py" }
+example-grn-sparse = { cmd = "python examples/grn_sparse_network.py" }
+
+[pypi-dependencies]
+pip = ">=25.3, <26"
+
+#[environments]
+#benchmark = ["benchmark"]

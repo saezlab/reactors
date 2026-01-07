@@ -1,0 +1,24 @@
+# Rust build artifacts
+target/
+
+# PyO3 / maturin builds
+*.so
+*.dylib
+*.pyd
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Editor and OS cruft
+.DS_Store
+
+# pixi environments
+.pixi/
+
+# Example outputs (keep .gitkeep)
+/examples/output/*
+!/examples/output/.gitkeep
+
+# Julia benchmark environment
+/examples/catalyst_env/

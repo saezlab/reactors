@@ -1,0 +1,46 @@
+[build-system]
+requires = ["maturin>=1.5,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "reactors"
+version = "0.1.0"
+description = "Parallel SSA engine for stochastic reaction networks written in Rust."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+authors = [{ name = "Pablo Rodriguez-Mier" }]
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+dependencies = ["numpy>=1.26"]
+
+[project.optional-dependencies]
+dev = ["pytest", "maturin>=1.5", "ruff"]
+examples = ["matplotlib>=3.9"]
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+module-name = "reactors"
+strip = true
+python-source = "python"
+
+[tool.uv]
+package = false
+python-preference = "only-system"
+
+[tool.uv.scripts]
+birth_death = "python examples/birth_death.py"
+toggle_switch = "python examples/toggle_switch.py"
+rna_splicing = "python examples/rna_splicing.py"
+maturin_develop = "maturin develop"
+large_benchmark = "python examples/large_benchmark.py"
+enzyme_kinetics = "python examples/enzyme_kinetics.py"
+cell_growth = "python examples/cell_growth.py"
