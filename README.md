@@ -63,7 +63,90 @@ You can also build the extension in-place with `pixi run maturin-develop`, which
 
 ## Some Examples
 
-### 1. COVID-19 Outbreak Modeling
+### 1. Light-Driven Cell Growth
+
+**Description:** This demo mirrors [Catalyst.jl’s](https://github.com/SciML/Catalyst.jl) “cell volume growth with sunlight drive” example, but runs it with exact SSA segments inside Reactors. The growth factor `G` only promotes volume increase while phosphorylated (`Gᴾ`), sunlight drives the phosphorylation rate via `kₚ (sin(t) + 1) / V`, and whenever the cell volume reaches `Vₘ` (50) we deterministically divide by two. By recomputing propensities every `dt` chunk we reproduce the same dynamics Catalyst models via SDEs; the default script keeps all reactions mass-action, with an optional `--use-michaelis-menten` flag that turns the growth reaction into a saturating Michaelis–Menten step.
+
+**Concrete example:**
+```python
+import math
+import numpy as np
+import reactors
+
+stoich = np.array([
+    [0, -1, 1],   # G -> Gp
+    [0, 1, -1],   # Gp -> G
+    [1, 1, -1],   # growth: Gp -> G + V
+], dtype=np.int32)
+reaction_type_codes = np.array([
+    reactors.ReactionType.MASS_ACTION,
+    reactors.ReactionType.MASS_ACTION,
+    reactors.ReactionType.MASS_ACTION,
+])
+reaction_type_params = None  # set when --use-michaelis-menten is supplied
+k_p, k_i, g_growth = 100.0, 60.0, 0.3
+
+state = np.array([25, 50, 0], dtype=np.int32)  # [V, G, Gᴾ]
+t = 0.0
+history = [state.copy()]
+while t < 20.0:
+    volume = max(state[0], 1)
+    sunlight = k_p * (math.sin(t + 0.05) + 1.0) / volume
+    dephos = k_i / volume
+    rates = np.array([sunlight, dephos, g_growth], dtype=np.float64)
+    final = reactors.simulate_ensemble(
+        stoich=stoich,
+        initial_state=state,
+        rate_constants=rates,
+        reaction_type_codes=reaction_type_codes,
+        reaction_type_params=reaction_type_params,
+        t_end=0.1,
+        n_trajectories=1,
+        mode="final",
+    )
+    state = final[0].astype(np.int32)
+    if state[0] >= 50:
+        state[0] //= 2  # deterministic division checkpoint
+    history.append(state.copy())
+    t += 0.1
+```
+
+**How to run it:** `examples/cell_growth.py` draws the piecewise-SSA trajectories (pass `--use-michaelis-menten` to enable saturating growth) and saves `examples/output/cell_growth_timeseries.png`:
+
+```bash
+pixi run example-cell-growth
+```
+
+<p align="center">
+  <img
+    src="docs/assets/examples/cell_growth_timeseries.jpg"
+    alt="cell growth example"
+    width="512"
+    style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);"
+  />
+</p>
+
+### 2. Michaelis–Menten Deterministic Approximation
+
+**Description:** This mirrors the Catalyst.jl example for deterministic Michaelis–Menten enzyme kinetics. The underlying reaction network is S + E ⇄ SE → P + E with rate constants (kᵦ, kᴅ, kᴘ) = (0.01, 0.1, 0.1), initial counts S₀=50, E₀=10, SE₀=P₀=0, and a simulation window of 0–200 time units. Instead of solving an ODE, Reactors fires a 4,096-trajectory SSA ensemble and plots the mean plus 90% bands for all species.
+
+**How to run it:** `examples/michaelis_menten_deterministic.py` saves `examples/output/michaelis_menten_deterministic.png` after plotting all species together.
+
+```bash
+pixi run example-michaelis-menten
+```
+
+<p align="center">
+  <img
+    src="docs/assets/examples/michaelis_menten_deterministic.jpg"
+    alt="Michaelis-Menten example"
+    width="768"
+    style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);"
+  />
+</p>
+
+
+### 3. COVID-19 Outbreak Modeling
 
 **Description:** Stochastic epidemic curves for COVID-19-style SIR dynamics call for ensembles that capture peak timing, uncertainty bands, and intervention scenarios without reverting to deterministic ODE solvers. This example shows how Reactors keeps exact infection and recovery event timing while allowing textbook propensities such as β SI / N through expression reactions.
 
@@ -186,203 +269,6 @@ resume = reactors.simulate_ensemble(
 ```
 
 Each trajectory keeps its deterministic RNG stream (`seed` + trajectory index) so these resumptions behave exactly like a single long simulation, but you can branch, apply new interventions, or collect denser outputs without serial loops. If you omit `initial_times`, every trajectory restarts at `t=0` (treating `t_points` as relative to the new phase).
-
-### 2. Light-Driven Cell Growth
-
-**Description:** This demo mirrors [Catalyst.jl’s](https://github.com/SciML/Catalyst.jl) “cell volume growth with sunlight drive” example, but runs it with exact SSA segments inside Reactors. The growth factor `G` only promotes volume increase while phosphorylated (`Gᴾ`), sunlight drives the phosphorylation rate via `kₚ (sin(t) + 1) / V`, and whenever the cell volume reaches `Vₘ` (50) we deterministically divide by two. By recomputing propensities every `dt` chunk we reproduce the same dynamics Catalyst models via SDEs; the default script keeps all reactions mass-action, with an optional `--use-michaelis-menten` flag that turns the growth reaction into a saturating Michaelis–Menten step.
-
-**Concrete example:**
-```python
-import math
-import numpy as np
-import reactors
-
-stoich = np.array([
-    [0, -1, 1],   # G -> Gp
-    [0, 1, -1],   # Gp -> G
-    [1, 1, -1],   # growth: Gp -> G + V
-], dtype=np.int32)
-reaction_type_codes = np.array([
-    reactors.ReactionType.MASS_ACTION,
-    reactors.ReactionType.MASS_ACTION,
-    reactors.ReactionType.MASS_ACTION,
-])
-reaction_type_params = None  # set when --use-michaelis-menten is supplied
-k_p, k_i, g_growth = 100.0, 60.0, 0.3
-
-state = np.array([25, 50, 0], dtype=np.int32)  # [V, G, Gᴾ]
-t = 0.0
-history = [state.copy()]
-while t < 20.0:
-    volume = max(state[0], 1)
-    sunlight = k_p * (math.sin(t + 0.05) + 1.0) / volume
-    dephos = k_i / volume
-    rates = np.array([sunlight, dephos, g_growth], dtype=np.float64)
-    final = reactors.simulate_ensemble(
-        stoich=stoich,
-        initial_state=state,
-        rate_constants=rates,
-        reaction_type_codes=reaction_type_codes,
-        reaction_type_params=reaction_type_params,
-        t_end=0.1,
-        n_trajectories=1,
-        mode="final",
-    )
-    state = final[0].astype(np.int32)
-    if state[0] >= 50:
-        state[0] //= 2  # deterministic division checkpoint
-    history.append(state.copy())
-    t += 0.1
-```
-
-**How to run it:** `examples/cell_growth.py` draws the piecewise-SSA trajectories (pass `--use-michaelis-menten` to enable saturating growth) and saves `examples/output/cell_growth_timeseries.png`:
-
-```bash
-pixi run example-cell-growth
-```
-
-<p align="center">
-  <img
-    src="docs/assets/examples/cell_growth_timeseries.jpg"
-    alt="cell growth example"
-    width="512"
-    style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);"
-  />
-</p>
-
-### 3. Michaelis–Menten Deterministic Approximation
-
-**Description:** This mirrors the Catalyst.jl example for deterministic Michaelis–Menten enzyme kinetics. The underlying reaction network is S + E ⇄ SE → P + E with rate constants (kᵦ, kᴅ, kᴘ) = (0.01, 0.1, 0.1), initial counts S₀=50, E₀=10, SE₀=P₀=0, and a simulation window of 0–200 time units. Instead of solving an ODE, Reactors fires a 4,096-trajectory SSA ensemble and plots the mean plus 90% bands for all species.
-
-**How to run it:** `examples/michaelis_menten_deterministic.py` saves `examples/output/michaelis_menten_deterministic.png` after plotting all species together.
-
-```bash
-pixi run example-michaelis-menten
-```
-
-<p align="center">
-  <img
-    src="docs/assets/examples/michaelis_menten_deterministic.jpg"
-    alt="Michaelis-Menten example"
-    width="768"
-    style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);"
-  />
-</p>
-
-
-### 4. RNA Splicing Dynamics
-
-**Description:** A minimal transcription → splicing → degradation cascade captures how pre-mRNA pools build up and feed into mature RNA. This example runs a 400-trajectory ensemble to visualize mean trajectories plus 10–90% bands, overlays a few single realizations, and then samples 2,000 final states to show the distribution of both species in one combined figure.
-
-**Concrete example:**
-```python
-# Species: [pre-mRNA, mature mRNA]
-stoich = np.array([
-    [1, 0],    # transcription
-    [-1, 1],   # splicing
-    [0, -1],   # degradation
-], dtype=np.int32)
-rates = np.array([25.0, 2.0, 0.7])
-codes = np.full(3, reactors.ReactionType.MASS_ACTION, dtype=np.int32)
-t_points = np.linspace(0.0, 40.0, 300)
-traj = reactors.simulate_ensemble(
-    stoich=stoich,
-    initial_state=np.zeros(2, dtype=np.int32),
-    rate_constants=rates,
-    reaction_type_codes=codes,
-    t_end=40.0,
-    n_trajectories=400,
-    t_points=t_points,
-)
-final_states = reactors.simulate_ensemble(
-    stoich=stoich,
-    initial_state=np.zeros(2, dtype=np.int32),
-    rate_constants=rates,
-    reaction_type_codes=codes,
-    t_end=40.0,
-    n_trajectories=2000,
-    mode="final",
-)
-```
-
-**How to run it:** `examples/rna_splicing.py` renders the trajectories plus both histograms in a single PNG (`examples/output/rna_splicing_overview.png`). Execute it with:
-
-```bash
-pixi run example-rna-splicing
-```
-
-<p align="center">
-  <img
-    src="docs/assets/examples/rna_splicing.jpg"
-    alt="RNA Splicing example"
-    width="768"
-    style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);"
-  />
-</p>
-
-
-### 5. Continuous-Time Boolean Networks
-
-**Description:** Continuous-time asynchronous Boolean networks can be viewed as finite-state continuous-time Markov chains where every node flip is a reaction with rates that depend on the current Boolean state. That makes them a native subset of the Gillespie SSA framework: the “species counts” are just constrained to 0 or 1, while logical rules supply the propensities. `examples/boolean_network.py` demonstrates this by encoding a very simple three-node repressilator-style circuit entirely with expression reactions, so each activation/deactivation event is simulated exactly by the SSA.
-
-**Concrete example:**
-```python
-SPECIES = ("A", "B", "C")
-FORMULAS = ("1.0 - s2", "1.0 - s0", "1.0 - s1")
-SWITCH_RATE = 35.0
-stoich, rates, codes, exprs = build_boolean_model()
-traj = reactors.simulate_ensemble(
-    stoich=stoich,
-    initial_state=np.array([1, 0, 0], dtype=np.int32),
-    rate_constants=rates,
-    reaction_type_codes=codes,
-    reaction_expressions=exprs,
-    t_end=20.0,
-    n_trajectories=256,
-    t_points=np.linspace(0.0, 20.0, 201),
-)
-```
-
-**How to run it:** `examples/boolean_network.py` plots the Boolean time traces (both single trajectories and the mean “on” probabilities) plus the terminal state distribution over the full `{0,1}^3` space and saves `examples/output/boolean_network.png`. Execute it via:
-
-```bash
-pixi run example-boolean-network
-```
-
-### 6. Sparse 50-Gene GRN with Correlations
-
-**Description:** A 50-node gene regulatory network with 3–8 random regulators per gene (mix of activators and repressors) plus an embedded two-gene or three-gene toggle to induce bistable phases. The script fires a parallel SSA ensemble with mid-run perturbations on the toggle arms, then visualizes (1) the bimodal final-state scatter for the toggle pair and (2) a 50×50 log1p correlation heatmap to expose co-expression structure across the sparse graph.
-
-**How to run it:** `examples/grn_sparse_network.py` saves `examples/output/grn_sparse_network.png` containing both panels. Execute it via:
-
-```bash
-pixi run example-grn-sparse
-```
-
-## Advanced Examples
-
-### RNA Velocity ABC Inference
-
-**Description:** Bridging Reactors' SSA simulator with statistical inference, this demo models two transcriptionally coupled genes with unspliced/spliced species, generates single-cell capture snapshots, and feeds them into an Approximate Bayesian Computation (ABC) loop. The workflow mirrors RNA velocity ideas: Reactors supplies ground-truth simulations, we compute time-binned summaries plus velocity-sensitive covariances, and a Latin-hypercube ABC rejection stage recovers transcription, splicing, and decay rates. The resulting figure combines observed vs inferred trajectories, posterior intervals, and a velocity field that compares true and inferred derivatives dS/dt.
-
-**Connection to RNA velocity:** RNA velocity tools (scVelo, dynamo) estimate how each cell will move in expression space from observed unspliced/spliced counts. This Reactors example provides a controlled sandbox (because the true kinetics are known) to prototype summaries, benchmarking strategies, or hybrid simulation-inference loops before taking ideas to high-dimensional transcriptomic data.
-
-**How to run it:**
-
-```bash
-pixi run example-rna-velocity-abc
-```
-
-The script saves `examples/output/rna_velocity_abc.png`, which includes snapshot scatter plots, time-binned summary comparisons, posterior parameter diagnostics, and the true vs inferred velocity vectors.
-
-<p align="center">
-  <img
-    src="docs/assets/examples/rna_velocity_abc.jpg"
-    alt="RNA Velocity example"
-    width="768"
-    style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);"
-  />
-</p>
 
 
 ## Building and developing
