@@ -397,7 +397,7 @@ Reactors is intentionally small and experimental. Current gaps include:
 - **Observability:** there is no built-in tracing, profiling, or progress reporting—long jobs remain silent unless you add Python-side hooks.
 - **Single-node parallelism:** Rayon handles one host worth of threads; there is no distributed or GPU backend.
 
-Future work could tackle per-trajectory readouts, expose RNG checkpointing, add compiled expression propensities or alias-table samplers, and surface richer diagnostics while keeping the core lightweight.
+Future work could tackle per-trajectory readouts, expose RNG checkpointing, add compiled expression propensities while keeping the core lightweight.
 
 ## Disclaimer
 
