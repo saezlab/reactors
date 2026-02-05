@@ -10,6 +10,7 @@ readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 authors = [{ name = "Pablo Rodriguez-Mier" }]
+keywords = ["ssa", "reaction-network", "simulation", "bioinformatics", "stochastic"]
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: 3",
@@ -17,10 +18,17 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Operating System :: OS Independent",
+    "License :: OSI Approved :: BSD License",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Topic :: Scientific/Engineering :: Mathematics",
 ]
 dependencies = ["numpy>=1.26"]
+
+[project.urls]
+Homepage = "https://github.com/pablormier/reactors"
+Repository = "https://github.com/pablormier/reactors"
+Documentation = "https://github.com/pablormier/reactors"
+Issues = "https://github.com/pablormier/reactors/issues"
 
 [project.optional-dependencies]
 dev = ["pytest", "maturin>=1.5", "ruff"]

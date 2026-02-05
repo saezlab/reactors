@@ -5,6 +5,23 @@ edition = "2024"
 authors = ["Pablo Rodriguez-Mier <pablo.rodriguez.mier@gmail.com>"]
 description = "A blazing-fast Python engine to simulate reaction networks, written in Rust"
 license = "BSD-3-Clause"
+rust-version = "1.92"
+readme = "README.md"
+repository = "https://github.com/pablormier/reactors"
+homepage = "https://github.com/pablormier/reactors"
+documentation = "https://docs.rs/reactors"
+keywords = ["ssa", "reaction-network", "simulation", "bioinformatics", "stochastic"]
+# TODO: Pick crates.io categories from the official list if you want them displayed.
+# categories = ["science::bioinformatics", "science::mathematics", "simulation"]
+exclude = [
+    "target/*",
+    ".pixi/*",
+    ".pycache/*",
+    "python/**/__pycache__/*",
+    "python/**/*.so",
+    "python/**/*.pyd",
+    "python/**/*.dylib",
+]
 
 [lib]
 name = "reactors"
