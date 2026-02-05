@@ -401,7 +401,7 @@ Future work could tackle per-trajectory readouts, expose RNG checkpointing, add 
 
 ## Disclaimer
 
-This library was written in Rust by GPT-5.2-Codex and Gemini 3 Pro.
+This library was written in Rust using GPT-5.2-Codex and Gemini 3 Pro models.
 
 ## License
 
